@@ -1,0 +1,4 @@
+pandas==3.0.1
+pm4py==2.7.19.8
+sentence-transformers==5.2.2
+qdrant-client==1.16.2
