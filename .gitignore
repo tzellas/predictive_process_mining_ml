@@ -1,3 +1,5 @@
 ppm_venv/
 __pycache__/
 *.pyc
+qdrant_data/
+data/.env

@@ -1,9 +1,9 @@
 import pandas as pd
 import pm4py
 import csv
+from pathlib import Path
 
-
-def read_clean_log(filename: str, trace_identifier: str = "case:concept:name"):
+def read_clean_log(filename, trace_identifier: str = "case:concept:name"):
 
   xes_log  = pm4py.read_xes(filename)
   df_log = pm4py.convert_to_dataframe(xes_log)
@@ -12,10 +12,11 @@ def read_clean_log(filename: str, trace_identifier: str = "case:concept:name"):
   df_log = df_log.sort_values([trace_identifier, "time:timestamp"]).reset_index(drop=True)
 
   # keep only complete events if life cycle column is present
+  allowed = {"complete", "completed"}
   if "lifecycle:transition" in df_log.columns:
     df_log = df_log[
-        df_log["lifecycle:transition"].astype(str).str.lower() == "complete"
-    ].reset_index(drop=True)
+              df_log["lifecycle:transition"].astype(str).str.strip().str.lower().isin(allowed)
+          ].reset_index(drop=True)
 
   # ignore trace attributes except trace id, keep event attributes
   keep_cols = [
@@ -26,7 +27,7 @@ def read_clean_log(filename: str, trace_identifier: str = "case:concept:name"):
   return df_log
 
 
-def build_prefixes(df_log: pd.DataFrame,  trace_identifier: str = "case:concept:name",base: int = 1, gap: int = 3):
+def build_prefixes(df_log: pd.DataFrame, base: int = 1, gap: int = 3, trace_identifier: str = "case:concept:name"):
   seen_prefixes = set()
   prefixes = []
   j_map = {}
@@ -86,7 +87,7 @@ def convert_to_csv(prefix_list: list[str], output_path: str):
         w.writerows(rows)
 
 
-def reduced_csv(input_path: str, output_path: str ,max_rows: int = 300):
+def reduced_csv(input_path, output_path, max_rows: int = 300):
   with open(input_path, "r", encoding="utf-8", newline="") as f:
     reader = csv.reader(f)
     header = next(reader)
@@ -100,3 +101,15 @@ def reduced_csv(input_path: str, output_path: str ,max_rows: int = 300):
       writer = csv.writer(f)
       writer.writerow(header)
       writer.writerows(rows)
+
+
+def log_processor(dataset_xes, keep_a_csv: bool, base: int = 1, gap: int = 3, trace_identifier: str = "case:concept:name"):
+    df = read_clean_log(dataset_xes, trace_identifier=trace_identifier)
+    prefix_list = build_prefixes(df, trace_identifier=trace_identifier, base=base, gap=gap)
+
+    if keep_a_csv:
+        out = Path(__file__).resolve().parent.parent / "data" / "csv_prefixes" / f"{Path(dataset_xes).stem}.csv"
+        out.parent.mkdir(parents=True, exist_ok=True)
+        convert_to_csv(prefix_list, str(out))
+
+    return prefix_list
