@@ -103,12 +103,12 @@ def reduced_csv(input_path, output_path, max_rows: int = 300):
       writer.writerows(rows)
 
 
-def log_processor(dataset_xes, keep_a_csv: bool, base: int = 1, gap: int = 3, trace_identifier: str = "case:concept:name"):
+def log_processor(dataset_xes, keep_a_csv: bool = True, base: int = 1, gap: int = 3, trace_identifier: str = "case:concept:name"):
     df = read_clean_log(dataset_xes, trace_identifier=trace_identifier)
     prefix_list = build_prefixes(df, trace_identifier=trace_identifier, base=base, gap=gap)
 
     if keep_a_csv:
-        out = Path(__file__).resolve().parent.parent / "data" / "csv_prefixes" / f"{Path(dataset_xes).stem}.csv"
+        out = Path(__file__).resolve().parent.parent / "data" / "csv_prefixes" / f"b{base}_g{gap}_{Path(dataset_xes).stem}.csv"
         out.parent.mkdir(parents=True, exist_ok=True)
         convert_to_csv(prefix_list, str(out))
 

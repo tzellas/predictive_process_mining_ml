@@ -4,3 +4,4 @@ __pycache__/
 qdrant_data/
 data/
 .env
+sources_and_relevant_content/

@@ -41,11 +41,14 @@ def retrieve_similar_prefixes(config, query_full_prefix, top_k: int = 5):
     )
     hits = res.points
 
-    context_lines = []
+    context = {}
     for rank, h in enumerate(hits, start=1):
         p = h.payload or {}
-        prefix = p.get("prefix", "")
-        pred = p.get("prediction", "")
-        context_lines.append(f"{rank}. [{prefix}] - {pred}  (score={h.score:.4f})")
+       
+        context[f"trace_{rank}"] = {
+            "prefix": p.get("prefix", ""),
+            "prediction": p.get("prediction", ""),
+            "score": round(float(h.score), 4),
+        }
 
-    return "\n".join(context_lines), hits
+    return context, hits
